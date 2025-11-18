@@ -46,13 +46,15 @@ namespace SolrNet.Cloud
             var baseUrl = (string)json.Value["base_url"];
             var leader = json.Value["leader"];
             var state = (string)json.Value["state"];
+            var replicaType = (ReplicaType) Enum.Parse(typeof(ReplicaType), json.Value["type"].ToString(), ignoreCase: true);
             var nodeName = (string)json.Value["node_name"];
 
             return new SolrCloudReplica(
                 IsActiveReplica(state, nodeName, liveNodes),
                 leader != null && (bool)leader,
                 json.Name,
-                baseUrl + "/" + collection);
+                baseUrl + "/" + collection,
+                replicaType);
         }
 
         /// <summary>
