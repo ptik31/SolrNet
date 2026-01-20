@@ -92,10 +92,9 @@ namespace SolrNet.Impl.ResponseParsers {
                     continue;
                 }
 
-                var bucketEntries = bucketNode.Elements("lst");
-
-                var field = facetEntry.Attribute("name").Value;
                 var c = new List<KeyValuePair<string, int>>();
+
+                var bucketEntries = bucketNode.Elements("lst");
                 foreach (var bucketEntry in bucketEntries)
                 {
                     var key = bucketEntry.Elements().FirstOrDefault(X.AttrEq("name", "val"))?.Value ?? string.Empty;
@@ -104,6 +103,18 @@ namespace SolrNet.Impl.ResponseParsers {
                     var value = Convert.ToInt32(count.Value);
                     c.Add(item: new KeyValuePair<string, int>(key, value));
                 }
+
+                var missingCount = facetEntry.Elements().FirstOrDefault(X.AttrEq("name", "missing"))?
+                                             .Elements().FirstOrDefault(X.AttrEq("name", "count"))?
+                                             .Value;
+
+                if (string.IsNullOrWhiteSpace(missingCount) is false)
+                {
+                    var missingValue = Convert.ToInt32(missingCount);
+                    c.Add(item: new KeyValuePair<string, int>(string.Empty, missingValue));
+                }
+
+                var field = facetEntry.Attribute("name").Value;
                 d[field] = c;
             }
             return d;
