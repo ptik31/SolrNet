@@ -116,7 +116,7 @@ namespace SolrNet.Cloud.ZooKeeperClient
 
         /// <summary>
         /// Reinitialize connection and get fresh cloud state.
-        /// Not included in ISolrCloudStateProvider interface due to the testing purpose only 
+        /// Not included in ISolrCloudStateProvider interface due to the testing purpose only
         /// (causes reloading all cloud data and too slow to use in production)
         /// </summary>
         /// <returns>Solr Cloud State</returns>
@@ -176,8 +176,12 @@ namespace SolrNet.Cloud.ZooKeeperClient
         /// <param name="cleanZookeeperConnection">clean zookeeper connection and create new one</param>
         private async Task SynchronizedUpdateAsync(bool cleanZookeeperConnection = false)
         {
+            var success = await semaphoreSlim.WaitAsync(TimeSpan.FromSeconds(10)).ConfigureAwait(false);
+            if (success is false)
+            {
+                return;
+            }
 
-            await semaphoreSlim.WaitAsync().ConfigureAwait(false);
             try
             {
                 await UpdateAsync(cleanZookeeperConnection).ConfigureAwait(false);
@@ -186,7 +190,6 @@ namespace SolrNet.Cloud.ZooKeeperClient
             {
                 semaphoreSlim.Release();
             }
-
         }
 
         /// <summary>
