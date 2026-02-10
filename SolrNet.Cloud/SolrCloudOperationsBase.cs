@@ -123,9 +123,9 @@ namespace SolrNet.Cloud  {
                            }
                            return replicas;
                        }
-                       catch (ApplicationException)
+                       catch (ApplicationException e)
                        {
-                           Console.WriteLine("ApplicationException");
+                           Console.WriteLine("ApplicationException\n{0}", e);
                            await cloudStateProvider.GetFreshCloudStateAsync().ConfigureAwait(continueOnCapturedContext: false);
                            throw;
                        }
