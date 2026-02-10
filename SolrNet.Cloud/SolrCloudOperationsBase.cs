@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace SolrNet.Cloud  {
     /// <summary>
@@ -98,18 +99,18 @@ namespace SolrNet.Cloud  {
                            var state = cloudStateProvider.GetCloudState();
                            if (state == null || state.Collections == null || state.Collections.Count == 0)
                            {
+                               Console.WriteLine("state == null || state.Collections == null || state.Collections.Count == 0\n{0}", JsonConvert.SerializeObject(state, Formatting.Indented));
                                throw new ApplicationException("Didn't get any collection's state from zookeeper.");
                            }
 
-                           if (collectionName != null && !state.Collections.ContainsKey(collectionName))
+                           if (string.IsNullOrWhiteSpace(collectionName) || !state.Collections.ContainsKey(collectionName))
                            {
+                               Console.WriteLine("string.IsNullOrWhiteSpace({0}) || !state.Collections.ContainsKey({0})\n{1}", collectionName, JsonConvert.SerializeObject(state, Formatting.Indented));
                                throw new ApplicationException(
                                    string.Format("Didn't get '{0}' collection state from zookeeper.", collectionName));
                            }
 
-                           var collection = collectionName == null
-                                                ? state.Collections.Values.First()
-                                                : state.Collections[collectionName];
+                           var collection = state.Collections[collectionName];
                            var replicas = collection.Shards.Values
                                                     .Where(shard => !leaders || shard.IsActive)
                                                     .SelectMany(shard => shard.Replicas.Values)
@@ -117,16 +118,24 @@ namespace SolrNet.Cloud  {
                                                     .ToList();
                            if (replicas.Count == 0)
                            {
+                               Console.WriteLine("replicas.Count == 0\n{0}", JsonConvert.SerializeObject(state, Formatting.Indented));
                                throw new ApplicationException("No appropriate node was selected to perform the operation.");
                            }
                            return replicas;
                        }
                        catch (ApplicationException)
                        {
+                           Console.WriteLine("ApplicationException");
                            await cloudStateProvider.GetFreshCloudStateAsync().ConfigureAwait(continueOnCapturedContext: false);
                            throw;
                        }
-                   })
+                       catch (Exception e)
+                       {
+                           Console.WriteLine("Exception e\n{0}", e);
+                           await cloudStateProvider.GetFreshCloudStateAsync().ConfigureAwait(continueOnCapturedContext: false);
+                           throw;
+                       }
+                   }, timeoutPerTryMs: 5 * 1000)
                    .GetAwaiter()
                    .GetResult();
         }

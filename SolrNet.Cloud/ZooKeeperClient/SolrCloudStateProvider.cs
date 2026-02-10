@@ -176,7 +176,7 @@ namespace SolrNet.Cloud.ZooKeeperClient
         /// <param name="cleanZookeeperConnection">clean zookeeper connection and create new one</param>
         private async Task SynchronizedUpdateAsync(bool cleanZookeeperConnection = false)
         {
-            var success = await semaphoreSlim.WaitAsync(TimeSpan.FromSeconds(10)).ConfigureAwait(false);
+            var success = await semaphoreSlim.WaitAsync(0).ConfigureAwait(false);
             if (success is false)
             {
                 return;
