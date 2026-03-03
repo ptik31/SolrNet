@@ -47,6 +47,12 @@ namespace SolrNet.Cloud.ZooKeeperClient
         private SolrCloudState state;
 
         /// <summary>
+        /// Generation counter for state updates, incremented on each successful update.
+        /// Used to skip redundant updates when multiple callers queue concurrently.
+        /// </summary>
+        private long _stateGeneration;
+
+        /// <summary>
         /// Object for lock
         /// </summary>
         private readonly System.Threading.SemaphoreSlim semaphoreSlim = new System.Threading.SemaphoreSlim(1, 1);
@@ -164,7 +170,9 @@ namespace SolrNet.Cloud.ZooKeeperClient
             {
                 await SynchronizedUpdateAsync().ConfigureAwait(false);
             }
-            else if (@event.get_Type() == Event.EventType.None && @event.getState() == Event.KeeperState.Disconnected)
+            else if (@event.get_Type() == Event.EventType.None
+                 && (@event.getState() == Event.KeeperState.Disconnected
+                 ||  @event.getState() == Event.KeeperState.Expired))
             {
                 await SynchronizedUpdateAsync(cleanZookeeperConnection: true).ConfigureAwait(false);
             }
@@ -176,15 +184,19 @@ namespace SolrNet.Cloud.ZooKeeperClient
         /// <param name="cleanZookeeperConnection">clean zookeeper connection and create new one</param>
         private async Task SynchronizedUpdateAsync(bool cleanZookeeperConnection = false)
         {
-            var success = await semaphoreSlim.WaitAsync(0).ConfigureAwait(false);
-            if (success is false)
-            {
+            var generationAtStart = System.Threading.Interlocked.Read(ref _stateGeneration);
+
+            var acquired = await semaphoreSlim.WaitAsync(TimeSpan.FromSeconds(30)).ConfigureAwait(false);
+            if (!acquired)
                 return;
-            }
 
             try
             {
+                if (System.Threading.Interlocked.Read(ref _stateGeneration) > generationAtStart)
+                    return;
+
                 await UpdateAsync(cleanZookeeperConnection).ConfigureAwait(false);
+                System.Threading.Interlocked.Increment(ref _stateGeneration);
             }
             finally
             {

@@ -99,13 +99,13 @@ namespace SolrNet.Cloud  {
                            var state = cloudStateProvider.GetCloudState();
                            if (state == null || state.Collections == null || state.Collections.Count == 0)
                            {
-                               Console.WriteLine("state == null || state.Collections == null || state.Collections.Count == 0\n{0}", JsonConvert.SerializeObject(state, Formatting.Indented));
+                               Console.WriteLine("state == null || state.Collections == null || state.Collections.Count == 0\n{0}", JsonConvert.SerializeObject(state));
                                throw new ApplicationException("Didn't get any collection's state from zookeeper.");
                            }
 
                            if (string.IsNullOrWhiteSpace(collectionName) || !state.Collections.ContainsKey(collectionName))
                            {
-                               Console.WriteLine("string.IsNullOrWhiteSpace({0}) || !state.Collections.ContainsKey({0})\n{1}", collectionName, JsonConvert.SerializeObject(state, Formatting.Indented));
+                               Console.WriteLine("string.IsNullOrWhiteSpace({0}) || !state.Collections.ContainsKey({0})\n{1}", collectionName, JsonConvert.SerializeObject(state));
                                throw new ApplicationException(
                                    string.Format("Didn't get '{0}' collection state from zookeeper.", collectionName));
                            }
@@ -118,7 +118,7 @@ namespace SolrNet.Cloud  {
                                                     .ToList();
                            if (replicas.Count == 0)
                            {
-                               Console.WriteLine("replicas.Count == 0\n{0}", JsonConvert.SerializeObject(state, Formatting.Indented));
+                               Console.WriteLine("replicas.Count == 0\n{0}", JsonConvert.SerializeObject(state));
                                throw new ApplicationException("No appropriate node was selected to perform the operation.");
                            }
                            return replicas;
@@ -164,7 +164,7 @@ namespace SolrNet.Cloud  {
                 catch (Exception) when (attempt < maxRetries && !cancellationToken.IsCancellationRequested)
                 {
                     var delay = GetExponentialBackoffDelay(attempt);
-                    await Task.Delay(delay, cts.Token).ConfigureAwait(continueOnCapturedContext: false);
+                    await Task.Delay(delay, cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
 
                     static TimeSpan GetExponentialBackoffDelay(int attempt)
                     {
