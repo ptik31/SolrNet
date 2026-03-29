@@ -68,6 +68,9 @@ namespace SolrNet.Cloud.CollectionsAdmin
         /// </param>
         /// <param name="rule">Replica placement rules. See the section Rule-based Replica Placement (https://cwiki.apache.org/confluence/display/solr/Rule-based+Replica+Placement) for details.</param>
         /// <param name="snitch">Details of the snitch provider. See the section Rule-based Replica Placement (https://cwiki.apache.org/confluence/display/solr/Rule-based+Replica+Placement) for details</param>
+        /// <param name="nrtReplicas">The number of NRT (Near-Real-Time) replicas to create for this collection. This type of replica maintains a transaction log and updates its index locally. If you want all of your replicas to be of this type, you can simply use replicationFactor instead.</param>
+        /// <param name="tlogReplicas">The number of TLOG replicas to create for this collection. This type of replica maintains a transaction log but only updates its index via replication from a leader. See the section Types of Replicas for more information about replica types.</param>
+        /// <param name="pullReplicas">The number of PULL replicas to create for this collection. This type of replica does not maintain a transaction log and only updates its index via replication from a leader. This type is not eligible to become a leader and should not be the only type of replicas in the collection. See the section Types of Replicas for more information about replica types.</param>
         /// <returns>Operation response header</returns>
         ResponseHeader CreateCollection(string collection,
             string routerName = null,
@@ -82,7 +85,10 @@ namespace SolrNet.Cloud.CollectionsAdmin
             IReadOnlyDictionary<string, string> coreProperties = null,
             bool? autoAddReplicas = null,
             string rule = null,
-            string snitch = null);
+            string snitch = null,
+            int? nrtReplicas = null,
+            int? tlogReplicas = null,
+            int? pullReplicas = null);
 
         /// <summary>
         /// Deletes a collection by name

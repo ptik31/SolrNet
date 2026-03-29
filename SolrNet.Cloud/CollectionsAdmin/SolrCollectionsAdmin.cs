@@ -35,7 +35,10 @@ namespace SolrNet.Cloud.CollectionsAdmin {
             IReadOnlyDictionary<string, string> coreProperties = null,
             bool? autoAddReplicas = null,
             string rule = null,
-            string snitch = null)
+            string snitch = null,
+            int? nrtReplicas = null,
+            int? tlogReplicas = null,
+            int? pullReplicas = null)
         {
             var solrParams = new SolrParams()
                 .AddRequired("action", "create")
@@ -52,7 +55,10 @@ namespace SolrNet.Cloud.CollectionsAdmin {
                 .AddOptional(CORE_PROPERTY_KEY_PREFIX, coreProperties)
                 .AddOptional("autoAddReplicas", autoAddReplicas)
                 .AddOptional("rule", rule)
-                .AddOptional("snitch", snitch);
+                .AddOptional("snitch", snitch)
+                .AddOptional("nrtReplicas", nrtReplicas)
+                .AddOptional("tlogReplicas", tlogReplicas)
+                .AddOptional("pullReplicas", pullReplicas);
 
             return SendAndParseHeader(AdminHandler, solrParams);
         }
